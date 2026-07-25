@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="assets/hyperagent-banner.png" alt="Hyperagent Banner" width="800"/>
-
+<img src="assets/hyperagent-banner.png" alt="Hyperagent Banner" width="800"/>
   <p align="center">
     <strong>Intelligent Browser Automation with LLMs</strong>
   </p>
