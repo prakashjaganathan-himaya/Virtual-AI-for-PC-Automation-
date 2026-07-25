@@ -147,12 +147,10 @@ export class HyperAgent<T extends BrowserProviders = "Local"> {
   /**
    *  This is just exposed as a utility function. You don't need to call it explicitly.
    * @returns A reference to the current rebrowser-playwright browser instance.
-   */
-  public async initBrowser(): Promise<Browser> {
+   */public async initBrowser(): Promise<Browser> {
     if (!this.browser) {
       this.browser = await this.browserProvider.start();
       if (
-        this.browserProviderType === "Hyperbrowser" &&
         this.browser.contexts().length > 0
       ) {
         this.context = this.browser.contexts()[0];
@@ -178,7 +176,7 @@ export class HyperAgent<T extends BrowserProviders = "Local"> {
     }
     return this.browser;
   }
-
+  
   /**
    * Use this function instead of accessing this.actions directly.
    * This function configures if there is a need for an output schema as a part of the complete action.

@@ -1,0 +1,18 @@
+====================================================================
+  IMPORTANT: Run this command ONCE before using HyperAgent
+====================================================================
+
+1. Close ALL Chrome windows completely
+
+2. Run this command in Command Prompt:
+
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="%LOCALAPPDATA%\Google\Chrome\User Data" --profile-directory=Default
+
+3. Chrome will open with your profile and debugging enabled
+
+4. Now you can run: node run-with-local-llm.js "your task"
+
+====================================================================
+
+Your Chrome will stay open after tasks complete.
+Close it manually when you're done.

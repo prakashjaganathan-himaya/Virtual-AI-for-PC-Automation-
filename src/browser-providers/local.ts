@@ -1,22 +1,36 @@
-import { chromium, Browser, LaunchOptions } from "playwright-core";
+import { chromium, Browser, BrowserContext, LaunchOptions } from "playwright-core";
 import BrowserProvider from "@/types/browser-providers/types";
+import * as path from "path";
+import * as os from "os";
 
 export class LocalBrowserProvider extends BrowserProvider<Browser> {
   options: Omit<Omit<LaunchOptions, "headless">, "channel"> | undefined;
   session: Browser | undefined;
+  private browserContext: BrowserContext | undefined;
+
   constructor(options?: Omit<Omit<LaunchOptions, "headless">, "channel">) {
     super();
     this.options = options;
   }
+
   async start(): Promise<Browser> {
     const launchArgs = this.options?.args ?? [];
-    const browser = await chromium.launch({
-      ...(this.options ?? {}),
-      channel: "chrome",
+
+    // Dedicated automation profile (a COPY) - never your live, in-use Chrome
+    const userDataDir = path.join(os.homedir(), 'AppData', 'Local', 'HyperAgent', 'ChromeProfile');
+
+    this.browserContext = await chromium.launchPersistentContext(userDataDir, {
       headless: false,
-      args: ["--disable-blink-features=AutomationControlled", ...launchArgs],
+      channel: "chrome",
+      executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      args: [
+        "--disable-blink-features=AutomationControlled",
+        "--profile-directory=Default",
+        ...launchArgs
+      ],
     });
-    this.session = browser;
+
+    this.session = this.browserContext.browser() as Browser;
     return this.session;
   }
   async close(): Promise<void> {
