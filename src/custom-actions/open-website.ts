@@ -1,5 +1,6 @@
-import type { Page } from "playwright";
+import type { Page } from "playwright-core";
 import { z } from "zod";
+import { ActionContext, ActionOutput, AgentActionDefinition } from "@/types";
 
 const KNOWN_SITES: Record<string, string> = {
   youtube: "https://www.youtube.com",
@@ -39,11 +40,10 @@ function closestKnownSite(name: string): string | null {
     const dist = levenshtein(name, key);
     if (dist < bestDist) { bestDist = dist; best = key; }
   }
-  const tolerance = name.length <= 4 ? 1 : 2; // short names need a tighter leash
+  const tolerance = name.length <= 4 ? 1 : 2;
   return bestDist <= tolerance ? best : null;
 }
 
-// Exported so the dispatcher can check confidence *before* committing to the fast path.
 export function resolveWebsiteTarget(target: string): { url: string; matched: boolean } {
   const clean = target.trim().toLowerCase().replace(/\.(com|org|net|io|in)$/, "");
 
@@ -72,12 +72,15 @@ export async function openWebsite(page: Page, target: string) {
   }
 }
 
-export function OpenWebsiteAction() {
-  return {
-    type: "open_website",
-    actionParams: z
-      .object({ target: z.string().describe("The name or URL of the website to open, e.g. 'twitter' or 'github.com'.") })
-      .describe("Open a website by name or URL — no multi-step task needed."),
-    run: async (ctx: any, params: { target: string }) => openWebsite(ctx.page, params.target),
-  };
-}
+export const OpenWebsiteActionParams = z.object({
+  target: z.string().describe("The name or URL of the website to open, e.g. 'twitter' or 'github.com'."),
+});
+export type OpenWebsiteActionParamsType = typeof OpenWebsiteActionParams;
+
+export const OpenWebsiteAction = (): AgentActionDefinition<OpenWebsiteActionParamsType> => ({
+  type: "OpenWebsiteActionParams",
+  toolName: "open_website",
+  toolDescription: "Open a website by name or URL - no multi-step task needed.",
+  actionParams: OpenWebsiteActionParams,
+  run: async (ctx: ActionContext, params): Promise<ActionOutput> => openWebsite(ctx.page, params.target),
+});

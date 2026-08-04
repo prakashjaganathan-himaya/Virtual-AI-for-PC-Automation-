@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ActionContext, ActionOutput, AgentActionDefinition } from "@/types";
 import { Page } from "playwright-core";
+import { fullscreenWindow } from "./fullscreen";
 
 async function skipYouTubeAds(page: Page, maxWaitMs = 90_000) {
   const deadline = Date.now() + maxWaitMs;
@@ -33,21 +34,6 @@ async function skipYouTubeAds(page: Page, maxWaitMs = 90_000) {
   }
 }
 
-async function goFullscreen(page: Page, maxWaitMs = 8_000) {
-  try {
-    const player = page.locator(".html5-video-player").first();
-    const fullscreenBtn = page.locator(".ytp-fullscreen-button").first();
-
-    await player.hover({ timeout: 2000 }).catch(() => {});
-    // waitFor actually polls until the button shows up - isVisible() doesn't,
-    // it checks once and returns instantly no matter what timeout you give it
-    await fullscreenBtn.waitFor({ state: "visible", timeout: maxWaitMs });
-    await fullscreenBtn.click({ timeout: 2000 });
-  } catch {
-    // not critical - don't fail the whole action over fullscreen
-  }
-}
-
 export async function playYouTube(page: Page, query: string) {
   try {
     const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
@@ -58,7 +44,6 @@ export async function playYouTube(page: Page, query: string) {
     await firstResult.click();
     await page.waitForSelector("video", { timeout: 8000 });
     await skipYouTubeAds(page);
-    await goFullscreen(page);
 
     return { success: true, message: `Playing "${query}" on YouTube.` };
   } catch (err) {

@@ -13,33 +13,55 @@ export class LocalBrowserProvider extends BrowserProvider<Browser> {
     this.options = options;
   }
 
-  async start(): Promise<Browser> {
-    const launchArgs = this.options?.args ?? [];
+async start(): Promise<Browser> {
+  const {
+    args: extraArgs,
+    userDataDir,
+    executablePath,
+    ...restOptions
+  } = (this.options ?? {}) as any;
 
-    // Dedicated automation profile (a COPY) - never your live, in-use Chrome
-    const userDataDir = path.join(os.homedir(), 'AppData', 'Local', 'HyperAgent', 'ChromeProfile');
+  const profile =
+    userDataDir ||
+    path.join(
+      os.homedir(),
+      "AppData",
+      "Local",
+      "Google",
+      "Chrome",
+      "User Data"
+    );
+this.browserContext = await chromium.launchPersistentContext(userDataDir, {
+  ...restOptions,
 
-    this.browserContext = await chromium.launchPersistentContext(userDataDir, {
-      headless: false,
-      channel: "chrome",
-      executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-      args: [
-        "--disable-blink-features=AutomationControlled",
-        "--profile-directory=Default",
-        ...launchArgs
-      ],
-    });
+  headless: false,
 
-    this.session = this.browserContext.browser() as Browser;
-    return this.session;
-  }
-  async close(): Promise<void> {
-    return await this.session?.close();
-  }
-  public getSession() {
-    if (!this.session) {
-      return null;
-    }
-    return this.session;
-  }
+  executablePath:
+    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+
+  ignoreDefaultArgs: ["--enable-automation"],
+
+  args: [
+    "--start-maximized",
+    "--disable-blink-features=AutomationControlled",
+    "--disable-infobars",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--profile-directory=Default",
+
+    ...(extraArgs ?? []),
+  ],
+});
+this.session = this.browserContext.browser() as Browser;
+
+const page = this.browserContext.pages()[0];
+
+await page.addInitScript(() => {
+  Object.defineProperty(navigator, "webdriver", {
+    get: () => undefined,
+  });
+});
+
+return this.session;
+}
 }

@@ -23,3 +23,4 @@ export {
   getOrCreateFrameContextManager,
 } from "./frame-context-manager";
 export { isAdOrTrackingFrame, FrameFilterContext } from "./frame-filters";
+export { setWindowState, WindowState } from "./window-control";
